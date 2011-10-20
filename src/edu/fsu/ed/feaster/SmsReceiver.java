@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
+import android.util.Log;
 /*Currently the priority isn't set high enough in the manifest
  * eventually I want this to swallow up messages with the given keyword using
  * abortBroadcast()
@@ -35,7 +36,7 @@ public class SmsReceiver extends BroadcastReceiver {
 		
 		mSettings = context.getSharedPreferences(LauncherActivity.SHARED_PREF_NAME,1);
 		String pw = mSettings.getString("key", "");//password user set in LauncherActivity
-		String message = mSettings.getString("msg", "");//message user set in LauncherActivity
+		String messageFromLauncherActivity = mSettings.getString("msg", "");//message user set in LauncherActivity
 		Bundle bundle = intent.getExtras();
 		
 		//decode SMS message
@@ -52,10 +53,21 @@ public class SmsReceiver extends BroadcastReceiver {
             //search for command+password
             for(int x = 0; x < commands_list.length; x++) {
                	String key_pw = commands_list[x]+":"+pw;//format should be "command:password"
-            	if(msg.contains(key_pw)) {
-                	Intent i = new Intent(context, SMSLocatorService.class);
+            	
+               	if(msg.contains(key_pw)) {
+            		Intent i = new Intent(context, SMSLocatorService.class);
                     i.putExtra("command", x);//command owner wants performed
-            		i.putExtra("message", message); //message from owner
+            		i.putExtra("message", messageFromLauncherActivity); //message from owner
+            		Log.v("SmsReciver Message", messageFromLauncherActivity);
+            		if(!messages[0].isEmail()) {
+            			i.putExtra("sender_phone", messages[0].getOriginatingAddress());
+            			i.putExtra("isEmail", false);
+            			} else {
+            				// This is untested. Need to test on real phone
+            				i.putExtra("sender_email", messages[0].getDisplayOriginatingAddress());
+            				i.putExtra("isEmail", true);
+            			}
+            		
             		context.startService(i);
             	}
             }

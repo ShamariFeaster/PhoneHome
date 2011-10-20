@@ -48,7 +48,7 @@ public class LauncherActivity extends Activity {
     			
     			mPrefEditor = Settings.edit();  
     			mPrefEditor.putString("key", EditTxt.getText().toString());  
-    			mPrefEditor.putString("message", message_to_finder.getText().toString()); 
+    			mPrefEditor.putString("msg", message_to_finder.getText().toString()); 
     			//mPrefEditor.putBoolean("show_image", mImageFlag);  
     			mPrefEditor.commit(); 
     			

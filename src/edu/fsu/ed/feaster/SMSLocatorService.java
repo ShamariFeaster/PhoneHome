@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.telephony.gsm.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -43,11 +44,14 @@ public class SMSLocatorService extends Service {
     protected LocationManager mLocationManager;
     private MyLocationListener mMyListener = new MyLocationListener();
     private Location mLocation; 
-
+    private SmsManager mSmsManager = SmsManager.getDefault();
+    
 	private int mCommand;
 	private String mMessage;
+	private String mAddress;
+	private Boolean mIsEmail; //did the command come from phone or email?
 	private MediaPlayer mMediaPlayer;
-	final int GPS_UPDATE_TIME_INTERVAL = 1800000;
+	final int GPS_UPDATE_TIME_INTERVAL = 1800000; //every 30 minutes
 	final int GPS_UPDATE_DISTANCE_INTERVAL = 0;
 	
 	    // Binding Section
@@ -61,6 +65,12 @@ public class SMSLocatorService extends Service {
 	    		SMSLocatorService.this.mMediaPlayer.stop();
 	    		SMSLocatorService.this.mMediaPlayer.release();
 	    	}
+	    	
+		    void sendResponse(String message) {
+		    	if(!mIsEmail) {
+		    		SMSLocatorService.this.mSmsManager.sendTextMessage(mAddress, null, message, null, null);
+		    	}
+		    }
 	    }
 	    
 	    private final IBinder mBinder = new LocalBinder();
@@ -71,14 +81,11 @@ public class SMSLocatorService extends Service {
 	    }
 	    // END Binding Section
 	    
-	    
 	    @Override
 	    public void onCreate() {
+	    	// TODO Remove when complete
 	        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-	        //Toast.makeText(this,R.string.local_service_started, Toast.LENGTH_SHORT).show();
-	     
 	    }
-	    
 
 	    @Override
 	    public int onStartCommand(Intent intent, int flags, int startId) {
@@ -88,6 +95,16 @@ public class SMSLocatorService extends Service {
 			    	mCommand = intent.getIntExtra("command", 5);
 		    	if( intent.hasExtra("message")) {
 		    		mMessage = intent.getStringExtra("message");
+		    		}
+		    	if( intent.hasExtra("sender_phone")) {
+		    		mAddress = intent.getStringExtra("sender_phone");
+		    		mIsEmail = false;
+		    		Log.v("Orig Address",mAddress);
+		    		}
+		    	if(intent.getBooleanExtra("isEmail", false)) {
+		    		mAddress = intent.getStringExtra("sender_email");
+		    		mIsEmail = true;
+		    		Log.v("Orig Email",mAddress);
 		    		}
 		    	}
 	    	switch(mCommand) {
@@ -134,20 +151,19 @@ public class SMSLocatorService extends Service {
 	    	mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
 	    	mMediaPlayer.setLooping(true);
 	    	mMediaPlayer.start();
-    		
-	    	// TODO bring up activity that allows user to stop alarm
-    		
-    		
 	    }
 	    
 	    private void startStopRinger() {
 
 	    	Intent broadcast = new Intent();
+	    	broadcast.putExtra("message", mMessage);
+	    	Log.v("SMSLocatorService message",mMessage);
 	    	broadcast.setAction("StopRinger");
 	    	sendBroadcast(broadcast);
 	    }
 	    
 	    private void enableGPS(boolean enable) {
+	    	//Uses exploit. CAUTION: make sure this holds up in future versions
 	        String provider = Settings.Secure.getString(getContentResolver(), 
 	            Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
 
@@ -162,6 +178,8 @@ public class SMSLocatorService extends Service {
 	        poke.setData(Uri.parse("3"));
 	        sendBroadcast(poke);
 	    }
+	    
+
 	    
 	    @Override
 	    public void onDestroy() {
@@ -237,6 +255,7 @@ public class SMSLocatorService extends Service {
 	    	            			);
 	    	      
 	    	            String response = GetJson();
+	    	            Log.v("Json Response", response);
 	    	            if(!response.equals("")) {
 		    	            try {
 									JSONObject jsonObject = new JSONObject(response);
