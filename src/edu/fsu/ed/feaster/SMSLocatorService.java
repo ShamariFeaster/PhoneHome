@@ -130,10 +130,7 @@ public class SMSLocatorService extends Service {
 	    }
 	    
 	    public void startStopRinger() {
-	    	/* TODO need to send intent to broadreciever who will launch activity
-	    	 *  then activity will bind to this service so it can cut alarm sound off
-	    	*/
-	    	
+
 	    	Intent broadcast = new Intent();
 	    	broadcast.setAction("StopRinger");
 	    	sendBroadcast(broadcast);
@@ -141,14 +138,8 @@ public class SMSLocatorService extends Service {
 	    
 	    @Override
 	    public void onDestroy() {
-	        // Cancel the persistent notification.
 	        mNM.cancel(NOTIFICATION);
 	        mLocationManager.removeUpdates(mMyListener);
-	        //mMediaPlayer.stop();
-	        //mMediaPlayer.release();
-	        // Tell the user we stopped.
-	        //Toast.makeText(this, R.string.local_service_stopped, Toast.LENGTH_SHORT).show();
-	    	;
 	    }
 
 	    private void showNotification() {
