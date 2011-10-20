@@ -95,7 +95,7 @@ public class SMSLocatorService extends Service {
 		    		playRinger();
 		    		startStopRinger();
 		    		break;
-		    	case SmsReceiver.PLAY_RINGER:
+		    	case SmsReceiver.TURN_ON_LOCATION:
 		    		//make phone ring
 		    		playRinger();
 		    		break;
