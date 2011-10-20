@@ -40,10 +40,13 @@ public class SMSLocatorService extends Service {
     private int NOTIFICATION = R.string.local_service_started;
     protected LocationManager mLocationManager;
     private MyLocationListener mMyListener = new MyLocationListener();
+    private Location mLocation; 
 
 	private int mCommand;
 	private String mMessage;
 	private MediaPlayer mMediaPlayer;
+	final int GPS_UPDATE_TIME_INTERVAL = 1800000;
+	final int GPS_UPDATE_DISTANCE_INTERVAL = 0;
 	
 	    // Binding Section
 	    public class LocalBinder extends Binder {
@@ -71,10 +74,7 @@ public class SMSLocatorService extends Service {
 	    public void onCreate() {
 	        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 	        //Toast.makeText(this,R.string.local_service_started, Toast.LENGTH_SHORT).show();
-	        
-	        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-	        showNotification();
-	        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,0,mMyListener );
+	     
 	    }
 	    
 
@@ -87,7 +87,7 @@ public class SMSLocatorService extends Service {
 		    	if( intent.hasExtra("message")) {
 		    		mMessage = intent.getStringExtra("message");
 		    		}
-	    	}
+		    	}
 	    	switch(mCommand) {
 		    	case SmsReceiver.TURN_ON_RINGER:
 		    		//turn on ringer
@@ -97,19 +97,27 @@ public class SMSLocatorService extends Service {
 		    		break;
 		    	case SmsReceiver.TURN_ON_LOCATION:
 		    		//make phone ring
-		    		playRinger();
+		    		turnonLocationService();
 		    		break;
 		    	default:
 		    		;
 		    	
 		    	}
 	    	}
-	        // We want this service to continue running until it is explicitly
-	        // stopped, so return sticky.
 	        return START_STICKY;
 	    }
 
-	    public void turnOnRinger() {
+	    private void turnonLocationService() {
+	    	   
+	        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+	        showNotification();
+	        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 
+	        		GPS_UPDATE_TIME_INTERVAL, GPS_UPDATE_DISTANCE_INTERVAL, mMyListener );
+	        //getJson is called in listener it requires an inital location, provided here
+	         mLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+	    }
+	    
+	    private void turnOnRinger() {
 	    	AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 	    	int maxStreamVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_RING);
 	    	mAudioManager.setRingerMode(AudioManager.VIBRATE_SETTING_OFF);
@@ -118,7 +126,7 @@ public class SMSLocatorService extends Service {
 	    				maxStreamVolume,AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
 	    }
 	    
-	    public void playRinger() {
+	    private void playRinger() {
 		    	
 	    	mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
 	    	mMediaPlayer.setLooping(true);
@@ -129,7 +137,7 @@ public class SMSLocatorService extends Service {
     		
 	    }
 	    
-	    public void startStopRinger() {
+	    private void startStopRinger() {
 
 	    	Intent broadcast = new Intent();
 	    	broadcast.setAction("StopRinger");
@@ -166,12 +174,12 @@ public class SMSLocatorService extends Service {
 	        StringBuilder builder = new StringBuilder();
 	   		HttpClient client = new DefaultHttpClient();
 	   		
-	   		Location location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+	   		
 	   	 
 	   		HttpGet httpGet = new HttpGet(
 	   				
 	   				"http://maps.googleapis.com/maps/api/geocode/json?latlng="
-	   				 +location.getLatitude()+","+location.getLongitude()+"&sensor=true");
+	   				 +mLocation.getLatitude()+","+mLocation.getLongitude()+"&sensor=true");
 	   		try {
 	   			HttpResponse response = client.execute(httpGet);
 	   			StatusLine statusLine = response.getStatusLine();
@@ -187,21 +195,22 @@ public class SMSLocatorService extends Service {
 	   				}
 	   			} else {
 	   				Log.e(ParseException.class.toString(), "Failed to download file");
-	   			}
-	   		} catch (ClientProtocolException e) {
-	   			e.printStackTrace();
-	   		} catch (IOException e) {
-	   			e.printStackTrace();
-	   		}
+	   				builder.append("");
+	   				}
+		   		} catch (ClientProtocolException e) {
+		   			Log.e("ClientProtocolException", "wrong protocol");
+		   			e.printStackTrace();
+		   			builder.append("");
+		   		} catch (IOException e) {
+		   			Log.e("IOException", "something went wrong try block: line 180");
+		   			e.printStackTrace();
+		   			builder.append(""); //incase nothing comes back the return statement wont fail
+		   		}
 		return builder.toString();
     }
 
 	    private class MyLocationListener implements LocationListener {
 	    	        public void onLocationChanged(Location location) {
-	    	        	
-	    	        	Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
-	    	        	v.vibrate(300);
 	        	
 	    	            String message = String.format(
 	    	            			"New Location \n Longitude: %1$s \n Latitude: %2$s",
@@ -209,16 +218,21 @@ public class SMSLocatorService extends Service {
 	    	            			);
 	    	      
 	    	            String response = GetJson();
-	    	            try {
-								JSONObject jsonObject = new JSONObject(response);
-								JSONArray resultObj = jsonObject.getJSONArray("results");
-								message = "You're In:\n"
-										+ resultObj.getJSONObject(1).getString("formatted_address");
-							} catch (JSONException e) {
-								e.printStackTrace();
-							}
+	    	            if(!response.equals("")) {
+		    	            try {
+									JSONObject jsonObject = new JSONObject(response);
+									JSONArray resultObj = jsonObject.getJSONArray("results");
+									message = "You're In:\n"
+											+ resultObj.getJSONObject(0).getString("formatted_address");
+								} catch (JSONException e) {
+									e.printStackTrace();
+									Log.v("JSON","JSON not well formatted");
+									}
 								Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-	    	        		}
+    	        			} else {
+    	        				Log.e("JSON Error","Failed to get JSON file");
+    	        			}
+	    	        	}
 
 	    	        public void onStatusChanged(String s, int i, Bundle b) {
 	    	        	Toast.makeText(SMSLocatorService.this, "Provider status changed",
