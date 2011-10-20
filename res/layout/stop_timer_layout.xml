@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent" android:weightSum="1">
+    <TextView 
+	    android:layout_width="match_parent" 
+	    android:layout_height="wrap_content" 
+	    android:id="@+id/message_text" 
+	    android:layout_weight="0.49">
+    </TextView>
+    <TextView 
+	    android:id="@+id/timer_description" 
+	    android:textAppearance="?android:attr/textAppearanceLarge" 
+	    android:layout_width="match_parent" 
+	    android:layout_height="wrap_content" 
+	    android:text="@string/timer_description" 
+	    android:layout_gravity="center_horizontal">
+    </TextView>
+    <TextView 
+	    android:layout_width="match_parent" 
+	    android:layout_height="wrap_content" 
+	    android:inputType="numberDecimal" 
+	    android:layout_weight="0.21" android:id="@+id/number_display">
+        <requestFocus></requestFocus>
+    </TextView>
+    <Button 
+	    android:layout_height="wrap_content" 
+	    android:layout_width="match_parent" 
+	    android:id="@+id/stop_timer_button" 
+	    android:layout_weight="0.30" 
+	    android:text="@string/timer_button_string">
+    </Button>
+    
+</LinearLayout>

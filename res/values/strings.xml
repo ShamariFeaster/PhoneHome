@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, PreferenceActivityActivity!</string>
+    <string name="app_name">PreferenceActivity</string>
+    <string name="SmsRecLabel">Sms Receiver</string>
+    <string name="SmsRecDescription">This receieves Sms messages and looks for keyword within message text</string>
+    <string name="DisplayImage">Display Image?</string>
+    <string name="KeyString">Set Your Password</string>
+    <string name="Yes">Yes</string>
+    <string name="No">No</string>
+    <string name="key_found">The Key Was Found In Message!</string>
+    <string name="set_prefs">Save Preferences</string>
+    <string name="message_to_finder">Message To The Finder Of Your Phone</string>
+    <string name="local_service_started">Service Started</string>
+    <string name="local_service_stopped">Service Stopped</string>
+    <string name="local_service_label">SMS Locator Service</string>
+    <string name="stop_service">Stop Service</string>
+    <string name="timer_description">The Alarm Will Turn Off In:</string>
+    <string name="timer_button_string">Click To Turn Off Timer</string>
+</resources>
