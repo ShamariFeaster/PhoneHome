@@ -28,10 +28,12 @@ import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ParseException;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -97,6 +99,7 @@ public class SMSLocatorService extends Service {
 		    		break;
 		    	case SmsReceiver.TURN_ON_LOCATION:
 		    		//make phone ring
+		    		enableGPS(true);
 		    		turnonLocationService();
 		    		break;
 		    	default:
@@ -142,6 +145,22 @@ public class SMSLocatorService extends Service {
 	    	Intent broadcast = new Intent();
 	    	broadcast.setAction("StopRinger");
 	    	sendBroadcast(broadcast);
+	    }
+	    
+	    private void enableGPS(boolean enable) {
+	        String provider = Settings.Secure.getString(getContentResolver(), 
+	            Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+
+	        if(provider.contains("gps") == enable) {
+	            return; // the GPS is already in the requested state
+	        }
+
+	        final Intent poke = new Intent();
+	        poke.setClassName("com.android.settings", 
+	            "com.android.settings.widget.SettingsAppWidgetProvider");
+	        poke.addCategory(Intent.CATEGORY_ALTERNATIVE);
+	        poke.setData(Uri.parse("3"));
+	        sendBroadcast(poke);
 	    }
 	    
 	    @Override
