@@ -36,6 +36,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class SMSLocatorService extends Service {
+	private static final String TAG = "SMSlocatorService";
+	
 	private NotificationManager mNM;
     private int NOTIFICATION = R.string.local_service_started;
     protected LocationManager mLocationManager;
@@ -73,6 +75,7 @@ public class SMSLocatorService extends Service {
 	    @Override
 	    public void onCreate() {
 	        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+	        Log.d(TAG, "onCreate");
 	        //Toast.makeText(this,R.string.local_service_started, Toast.LENGTH_SHORT).show();
 	     
 	    }
@@ -118,6 +121,7 @@ public class SMSLocatorService extends Service {
 	    }
 	    
 	    private void turnOnRinger() {
+	    	Log.d(TAG, "turnOnRinger");
 	    	AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 	    	int maxStreamVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_RING);
 	    	mAudioManager.setRingerMode(AudioManager.VIBRATE_SETTING_OFF);
@@ -127,10 +131,11 @@ public class SMSLocatorService extends Service {
 	    }
 	    
 	    private void playRinger() {
-		    	
+	    	Log.d(TAG, "playRinger");	
 	    	mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
 	    	mMediaPlayer.setLooping(true);
 	    	mMediaPlayer.start();
+	    	Log.d(TAG, "MediaPlayer Start");
     		
 	    	// TODO bring up activity that allows user to stop alarm
     		
@@ -142,12 +147,14 @@ public class SMSLocatorService extends Service {
 	    	Intent broadcast = new Intent();
 	    	broadcast.setAction("StopRinger");
 	    	sendBroadcast(broadcast);
+	    	Log.d(TAG, "StopRinger Broadcast Sent");
 	    }
 	    
 	    @Override
 	    public void onDestroy() {
 	        mNM.cancel(NOTIFICATION);
 	        mLocationManager.removeUpdates(mMyListener);
+	        Log.d(TAG, "LocationManager Unregistered");
 	    }
 
 	    private void showNotification() {

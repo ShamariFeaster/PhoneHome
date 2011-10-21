@@ -5,12 +5,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
 
 public class LauncherActivity extends Activity {
+	private static final String TAG = "LauncherActivity";
 	public static final String SHARED_PREF_NAME = "mySharedPreference";
 	Editor mPrefEditor;
 	//Boolean mImageFlag = true;
@@ -39,6 +41,7 @@ public class LauncherActivity extends Activity {
 */
     	mSetPrefs.setOnClickListener(new View.OnClickListener() {
     		public void onClick(View v) {
+    			Log.d(TAG, "mSetPrefs Clicked");
     			
     			SharedPreferences Settings;
     			EditText EditTxt = (EditText) findViewById(R.id.editText1);
@@ -51,6 +54,7 @@ public class LauncherActivity extends Activity {
     			mPrefEditor.putString("message", message_to_finder.getText().toString()); 
     			//mPrefEditor.putBoolean("show_image", mImageFlag);  
     			mPrefEditor.commit(); 
+    			Log.d(TAG, "Preferences Saved");
     			
     		}
 
@@ -60,7 +64,9 @@ public class LauncherActivity extends Activity {
     	mCloserButton.setOnClickListener(new View.OnClickListener() {
 
 			public void onClick(View v) {
+				Log.d(TAG, "mCloserButton Clicked");
 				stopService(new Intent(getApplicationContext(), SMSLocatorService.class));
+				Log.d(TAG, "StopService Intent to SMSLocatorService");
 			}
 		});
 			
