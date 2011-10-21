@@ -51,7 +51,7 @@ public class SMSLocatorService extends Service {
 	private String mAddress;
 	private Boolean mIsEmail; //did the command come from phone or email?
 	private MediaPlayer mMediaPlayer;
-	final int GPS_UPDATE_TIME_INTERVAL = 1800000; //every 30 minutes
+	final int GPS_UPDATE_TIME_INTERVAL = 1000; // final should be 1800000 = every 30 minutes; for testing its every second
 	final int GPS_UPDATE_DISTANCE_INTERVAL = 0;
 	
 	    // Binding Section
@@ -133,9 +133,7 @@ public class SMSLocatorService extends Service {
 	        showNotification();
 	        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 
 	        		GPS_UPDATE_TIME_INTERVAL, GPS_UPDATE_DISTANCE_INTERVAL, mMyListener );
-	        //getJson is called in listener it requires an inital location, provided here
-	         mLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-	    }
+	    	}
 	    
 	    private void turnOnRinger() {
 	    	AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -207,16 +205,14 @@ public class SMSLocatorService extends Service {
 	        mNM.notify(NOTIFICATION, notification);
 	    }
 	    
-	    private String GetJson() {
+	    private String GetJson(Location location) {
 	        StringBuilder builder = new StringBuilder();
 	   		HttpClient client = new DefaultHttpClient();
-	   		
-	   		
-	   	 
+
 	   		HttpGet httpGet = new HttpGet(
 	   				
 	   				"http://maps.googleapis.com/maps/api/geocode/json?latlng="
-	   				 +mLocation.getLatitude()+","+mLocation.getLongitude()+"&sensor=true");
+	   				 +location.getLatitude()+","+location.getLongitude()+"&sensor=true");
 	   		try {
 	   			HttpResponse response = client.execute(httpGet);
 	   			StatusLine statusLine = response.getStatusLine();
@@ -253,8 +249,8 @@ public class SMSLocatorService extends Service {
 	    	            			"New Location \n Longitude: %1$s \n Latitude: %2$s",
     	            				location.getLongitude(), location.getLatitude()
 	    	            			);
-	    	      
-	    	            String response = GetJson();
+	    	            //mLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+	    	            String response = GetJson(location);
 	    	            Log.v("Json Response", response);
 	    	            if(!response.equals("")) {
 		    	            try {
@@ -266,10 +262,12 @@ public class SMSLocatorService extends Service {
 									e.printStackTrace();
 									Log.v("JSON","JSON not well formatted");
 									}
-								Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+								
     	        			} else {
     	        				Log.e("JSON Error","Failed to get JSON file");
+    	        				
     	        			}
+	    	            	Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
 	    	        	}
 
 	    	        public void onStatusChanged(String s, int i, Bundle b) {
