@@ -22,6 +22,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -40,6 +41,7 @@ import android.widget.Toast;
 
 public class SMSLocatorService extends Service {
 	private static final String TAG = "SMSlocatorService";
+	
 	
 	private NotificationManager mNM;
     private int NOTIFICATION = R.string.local_service_started;
@@ -87,6 +89,7 @@ public class SMSLocatorService extends Service {
 	    public void onCreate() {
 	    	// TODO Remove when complete
 	        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+	        SharedPreferences preferences = getSharedPreferences("preferences", MODE_PRIVATE);
 	        Log.d(TAG, "onCreate");
 	        //Toast.makeText(this,R.string.local_service_started, Toast.LENGTH_SHORT).show();
 	     
@@ -94,6 +97,8 @@ public class SMSLocatorService extends Service {
 
 	    @Override
 	    public int onStartCommand(Intent intent, int flags, int startId) {
+	    	
+	    	
 	    	Log.v("myService", "has started");
 	    	if(intent != null) {
 		    	if(intent.hasExtra("command")) {
