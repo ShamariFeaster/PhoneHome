@@ -73,7 +73,7 @@ public class SmsReceiver extends BroadcastReceiver {
             		editor.putLong("command", x);
             		
                     i.putExtra("command", x);//command owner wants performed
-                    
+ 
                     //message already in preference with key "message"
                     
             		i.putExtra("message", messsageFromLauncherActivity); //message from owner
