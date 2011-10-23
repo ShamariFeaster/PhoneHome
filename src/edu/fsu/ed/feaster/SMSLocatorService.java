@@ -34,6 +34,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.telephony.gsm.SmsManager;
 import android.util.Log;
@@ -41,7 +42,6 @@ import android.widget.Toast;
 
 public class SMSLocatorService extends Service {
 	private static final String TAG = "SMSlocatorService";
-	
 	
 	private NotificationManager mNM;
     private int NOTIFICATION = R.string.local_service_started;
@@ -57,6 +57,8 @@ public class SMSLocatorService extends Service {
 	private MediaPlayer mMediaPlayer;
 	final int GPS_UPDATE_TIME_INTERVAL = 1000; // final should be 1800000 = every 30 minutes; for testing its every second
 	final int GPS_UPDATE_DISTANCE_INTERVAL = 0;
+	
+	SharedPreferences preferences;
 	
 	    // Binding Section
 	    public class LocalBinder extends Binder {
@@ -89,7 +91,7 @@ public class SMSLocatorService extends Service {
 	    public void onCreate() {
 	    	// TODO Remove when complete
 	        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-	        SharedPreferences preferences = getSharedPreferences("preferences", MODE_PRIVATE);
+	        preferences = getSharedPreferences("preferences", Context.MODE_WORLD_READABLE);
 	        Log.d(TAG, "onCreate");
 	        //Toast.makeText(this,R.string.local_service_started, Toast.LENGTH_SHORT).show();
 	     
@@ -98,16 +100,21 @@ public class SMSLocatorService extends Service {
 	    @Override
 	    public int onStartCommand(Intent intent, int flags, int startId) {
 	    	
-	    	
 	    	Log.v("myService", "has started");
-	    	if(intent != null) {
+	    	
+	    	mCommand = preferences.getInt("command", 5);
+	    	mMessage = preferences.getString("message", null);
+	    	mAddress = preferences.getString("sender_phone", null);
+	    	mIsEmail = preferences.getBoolean("isEmail", false);
+	    	
+	    	/*if(intent != null) {
 		    	if(intent.hasExtra("command")) {
 			    	mCommand = intent.getIntExtra("command", 5);
+			    	Log.d("command", "" + mCommand);
 		    	if( intent.hasExtra("message")) {
 		    		mMessage = intent.getStringExtra("message");
 		    		}
-		    	if( intent.hasExtra("sender_phone")) {
-		    		mAddress = intent.getStringExtra("sender_phone");
+		    	if( mAddress != null) {
 		    		mIsEmail = false;
 		    		Log.v("Orig Address",mAddress);
 		    		}
@@ -116,7 +123,7 @@ public class SMSLocatorService extends Service {
 		    		mIsEmail = true;
 		    		Log.v("Orig Email",mAddress);
 		    		}
-		    	}
+		    	}*/
 	    	switch(mCommand) {
 		    	case SmsReceiver.TURN_ON_RINGER:
 		    		//turn on ringer
@@ -133,7 +140,7 @@ public class SMSLocatorService extends Service {
 		    		;
 		    	
 		    	}
-	    	}
+	    	//}
 	        return START_STICKY;
 	    }
 

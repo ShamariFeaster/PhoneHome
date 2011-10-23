@@ -44,8 +44,8 @@ public class SmsReceiver extends BroadcastReceiver {
 		//String pw = mSettings.getString("key", "");//password user set in LauncherActivity
 		//String messageFromLauncherActivity = mSettings.getString("msg", "");//message user set in LauncherActivity
 		
-		String pw = preferences.getString("password", "");
-		String messsageFromLauncherActivity = preferences.getString("message", "");
+		String pw = preferences.getString("password", null);
+		String messsageFromLauncherActivity = preferences.getString("message", null);
 		Log.d(TAG, "Password: " + pw);
 		Log.d(TAG, "Message: " + messsageFromLauncherActivity);
 		
@@ -70,9 +70,8 @@ public class SmsReceiver extends BroadcastReceiver {
                	if(msg.contains(key_pw)) {
             		Intent i = new Intent(context, SMSLocatorService.class);
             		
-            		editor.putLong("command", x);
+            		editor.putInt("command", x);
             		
-                    i.putExtra("command", x);//command owner wants performed
  
                     //message already in preference with key "message"
                     
@@ -83,16 +82,12 @@ public class SmsReceiver extends BroadcastReceiver {
             			editor.putString("sender_phone", messages[0].getOriginatingAddress());
             			editor.putBoolean("isEmail", false);
             			
-            			i.putExtra("sender_phone", messages[0].getOriginatingAddress());
-            			i.putExtra("isEmail", false);
             			} else {
             				
             				// This is untested. Need to test on real phone
             				editor.putString("sender_email",messages[0].getDisplayOriginatingAddress());
-            				editor.putBoolean("isEmail", false);
+            				editor.putBoolean("isEmail", true);
             				
-            				i.putExtra("sender_email", messages[0].getDisplayOriginatingAddress());
-            				i.putExtra("isEmail", true);
             			}
             		
             		context.startService(i);
