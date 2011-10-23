@@ -48,8 +48,8 @@ public class LauncherActivity extends Activity {
     	mSetPrefs.setOnClickListener(new View.OnClickListener() {
     		public void onClick(View v) {
     			
-    			SharedPreferences sharedPreferences = getSharedPreferences("preferences", MODE_PRIVATE);
-    			SharedPreferences.Editor editor = sharedPreferences.edit();
+    			SharedPreferences preferences = getSharedPreferences("preferences", 3);
+    			SharedPreferences.Editor editor = preferences.edit();
     			Log.d(TAG, "mSetPrefs Clicked");
     			
     			//SharedPreferences Settings;
