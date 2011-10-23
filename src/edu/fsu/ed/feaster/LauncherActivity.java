@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -12,14 +13,19 @@ import android.widget.EditText;
 
 
 public class LauncherActivity extends Activity {
+	
+	//SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+	
 	private static final String TAG = "LauncherActivity";
-	public static final String SHARED_PREF_NAME = "mySharedPreference";
-	Editor mPrefEditor;
+	//Editor mPrefEditor;
 	//Boolean mImageFlag = true;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        
+        
+        PreferenceManager.setDefaultValues(this, R.xml.preference, false);
 
     	//RadioGroup mRadioGroup = (RadioGroup) findViewById(R.id.radioGroup1);
     	Button mSetPrefs = (Button) findViewById(R.id.button1); 
@@ -41,19 +47,26 @@ public class LauncherActivity extends Activity {
 */
     	mSetPrefs.setOnClickListener(new View.OnClickListener() {
     		public void onClick(View v) {
+    			
+    			SharedPreferences sharedPreferences = getSharedPreferences("preferences", MODE_PRIVATE);
+    			SharedPreferences.Editor editor = sharedPreferences.edit();
     			Log.d(TAG, "mSetPrefs Clicked");
     			
-    			SharedPreferences Settings;
+    			//SharedPreferences Settings;
     			EditText EditTxt = (EditText) findViewById(R.id.editText1);
     			EditText message_to_finder = (EditText) findViewById(R.id.message_to_finder_text);
     			
-    			Settings = getSharedPreferences(SHARED_PREF_NAME, 2);
+    			//Settings = getSharedPreferences(SHARED_PREF_NAME, 2);
     			
-    			mPrefEditor = Settings.edit();  
-    			mPrefEditor.putString("key", EditTxt.getText().toString());  
-    			mPrefEditor.putString("msg", message_to_finder.getText().toString()); 
+    			editor.putString("password", EditTxt.getText().toString());
+    			editor.putString("message", message_to_finder.getText().toString());
+    			
+    			//mPrefEditor = Settings.edit();  
+    			//mPrefEditor.putString("key", EditTxt.getText().toString());  
+    			//mPrefEditor.putString("msg", message_to_finder.getText().toString()); 
     			//mPrefEditor.putBoolean("show_image", mImageFlag);  
-    			mPrefEditor.commit(); 
+    			//mPrefEditor.commit(); 
+    			editor.commit();
     			Log.d(TAG, "Preferences Saved");
     			
     		}

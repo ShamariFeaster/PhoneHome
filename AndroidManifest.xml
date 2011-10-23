@@ -49,6 +49,7 @@
 			<action android:name="android.intent.action.LAUNCHER"></action>
 		</intent-filter>
 	</activity>
+	<activity android:name="Preferences"></activity>
 	
 	
     </application>

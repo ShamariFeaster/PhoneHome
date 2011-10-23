@@ -21,12 +21,16 @@ public class SmsReceiver extends BroadcastReceiver {
 
 	protected static final int TURN_ON_RINGER = 0;
 	protected static final int TURN_ON_LOCATION = 1;
+	private static final String TAG = "SMSReciever";
+	SharedPreferences preferences;
 	
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
+		Log.d(TAG, "onReceive");
+		preferences = context.getSharedPreferences("preferences", 3);
 
-		SharedPreferences mSettings;
+		//SharedPreferences mSettings;
 		String[] commands_list = {"com1","com2","com3","com4"};//possible commands to perform remote operations
 		Map<String, Integer> command_map = new HashMap<String, Integer>();
 		for(int x = 0; x < commands_list.length; x++) {
@@ -34,9 +38,16 @@ public class SmsReceiver extends BroadcastReceiver {
 		}
 		
 		
-		mSettings = context.getSharedPreferences(LauncherActivity.SHARED_PREF_NAME,1);
-		String pw = mSettings.getString("key", "");//password user set in LauncherActivity
-		String messageFromLauncherActivity = mSettings.getString("msg", "");//message user set in LauncherActivity
+		//mSettings = context.getSharedPreferences(LauncherActivity.SHARED_PREF_NAME,1);
+		//String pw = mSettings.getString("key", "");//password user set in LauncherActivity
+		//String messageFromLauncherActivity = mSettings.getString("msg", "");//message user set in LauncherActivity
+		
+		String pw = preferences.getString("password", "");
+		String messsageFromLauncherActivity = preferences.getString("message", "");
+		Log.d(TAG, "Password: " + pw);
+		Log.d(TAG, "Message: " + messsageFromLauncherActivity);
+		
+		
 		Bundle bundle = intent.getExtras();
 		
 		//decode SMS message
@@ -57,8 +68,8 @@ public class SmsReceiver extends BroadcastReceiver {
                	if(msg.contains(key_pw)) {
             		Intent i = new Intent(context, SMSLocatorService.class);
                     i.putExtra("command", x);//command owner wants performed
-            		i.putExtra("message", messageFromLauncherActivity); //message from owner
-            		Log.v("SmsReciver Message", messageFromLauncherActivity);
+            		i.putExtra("message", messsageFromLauncherActivity); //message from owner
+            		Log.v("SmsReciver Message", messsageFromLauncherActivity);
             		if(!messages[0].isEmail()) {
             			i.putExtra("sender_phone", messages[0].getOriginatingAddress());
             			i.putExtra("isEmail", false);
