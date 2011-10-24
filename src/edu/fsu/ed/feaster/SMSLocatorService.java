@@ -124,6 +124,7 @@ public class SMSLocatorService extends Service {
 		    		Log.v("Orig Email",mAddress);
 		    		}
 		    	}*/
+	    	
 	    	switch(mCommand) {
 		    	case SmsReceiver.TURN_ON_RINGER:
 		    		//turn on ringer
