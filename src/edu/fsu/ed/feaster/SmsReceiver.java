@@ -24,7 +24,6 @@ public class SmsReceiver extends BroadcastReceiver {
 	private static final String TAG = "SMSReciever";
 	SharedPreferences preferences;
 	
-	
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Log.d(TAG, "onReceive");
@@ -32,23 +31,16 @@ public class SmsReceiver extends BroadcastReceiver {
 
 		SharedPreferences.Editor editor = preferences.edit();
 
-		//SharedPreferences mSettings;
 		String[] commands_list = {"com1","com2","com3","com4"};//possible commands to perform remote operations
 		Map<String, Integer> command_map = new HashMap<String, Integer>();
 		for(int x = 0; x < commands_list.length; x++) {
 			command_map.put(commands_list[x], x);
 		}
 		
-		
-		//mSettings = context.getSharedPreferences(LauncherActivity.SHARED_PREF_NAME,1);
-		//String pw = mSettings.getString("key", "");//password user set in LauncherActivity
-		//String messageFromLauncherActivity = mSettings.getString("msg", "");//message user set in LauncherActivity
-		
 		String pw = preferences.getString("password", null);
 		String messsageFromLauncherActivity = preferences.getString("message", null);
 		Log.d(TAG, "Password: " + pw);
 		Log.d(TAG, "Message: " + messsageFromLauncherActivity);
-		
 		
 		Bundle bundle = intent.getExtras();
 		
@@ -71,7 +63,6 @@ public class SmsReceiver extends BroadcastReceiver {
             		Intent i = new Intent(context, SMSLocatorService.class);
             		
             		editor.putInt("command", x);
-            		
  
                     //message already in preference with key "message"
                     
