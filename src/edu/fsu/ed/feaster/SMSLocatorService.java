@@ -33,8 +33,6 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Vibrator;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.telephony.gsm.SmsManager;
 import android.util.Log;
@@ -55,7 +53,7 @@ public class SMSLocatorService extends Service {
 	private String mAddress;
 	private Boolean mIsEmail; //did the command come from phone or email?
 	private MediaPlayer mMediaPlayer;
-	final int GPS_UPDATE_TIME_INTERVAL = 1000; // final should be 1800000 = every 30 minutes; for testing its every second
+	final int GPS_UPDATE_TIME_INTERVAL = 60000; // final should be 1800000 = every 30 minutes; for testing its every second
 	final int GPS_UPDATE_DISTANCE_INTERVAL = 0;
 	
 	SharedPreferences preferences;
@@ -73,9 +71,8 @@ public class SMSLocatorService extends Service {
 	    	}
 	    	
 		    void sendResponse(String message) {
-		    	if(!mIsEmail) {
+		    		Log.v("sendResponse()","mAddress: " + mAddress +" mIsEmail: " + mIsEmail);
 		    		SMSLocatorService.this.mSmsManager.sendTextMessage(mAddress, null, message, null, null);
-		    	}
 		    }
 	    }
 	    
@@ -87,15 +84,7 @@ public class SMSLocatorService extends Service {
 	    }
 	    // END Binding Section
 	    
-	    @Override
-	    public void onCreate() {
-	    	// TODO Remove when complete
-	        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-	        preferences = getSharedPreferences("preferences", Context.MODE_WORLD_READABLE);
-	        Log.d(TAG, "onCreate");
-	        //Toast.makeText(this,R.string.local_service_started, Toast.LENGTH_SHORT).show();
-	     
-	    }
+
 
 	    @Override
 	    public int onStartCommand(Intent intent, int flags, int startId) {
@@ -106,24 +95,11 @@ public class SMSLocatorService extends Service {
 	    	mMessage = preferences.getString("message", null);
 	    	mAddress = preferences.getString("sender_phone", null);
 	    	mIsEmail = preferences.getBoolean("isEmail", false);
-	    	
-	    	/*if(intent != null) {
-		    	if(intent.hasExtra("command")) {
-			    	mCommand = intent.getIntExtra("command", 5);
-			    	Log.d("command", "" + mCommand);
-		    	if( intent.hasExtra("message")) {
-		    		mMessage = intent.getStringExtra("message");
-		    		}
-		    	if( mAddress != null) {
-		    		mIsEmail = false;
-		    		Log.v("Orig Address",mAddress);
-		    		}
-		    	if(intent.getBooleanExtra("isEmail", false)) {
-		    		mAddress = intent.getStringExtra("sender_email");
-		    		mIsEmail = true;
-		    		Log.v("Orig Email",mAddress);
-		    		}
-		    	}*/
+	    	if(mIsEmail) {
+	    		Log.v("Orig Email",mAddress);
+		    	} else {
+		    		Log.v("Orig Phone Address",mAddress);
+		    	}
 	    	
 	    	switch(mCommand) {
 		    	case SmsReceiver.TURN_ON_RINGER:
@@ -145,6 +121,13 @@ public class SMSLocatorService extends Service {
 	        return START_STICKY;
 	    }
 
+	    @Override
+	    public void onCreate() {
+	        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+	        preferences = getSharedPreferences("preferences", Context.MODE_WORLD_READABLE);
+	        Log.d(TAG, "onCreate");
+	    	}
+	    
 	    private void turnonLocationService() {
 	    	   
 	        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -165,25 +148,23 @@ public class SMSLocatorService extends Service {
 	    
 	    private void playRinger() {
 	    	Log.d(TAG, "playRinger");	
+	    	mMediaPlayer = new MediaPlayer();
+	    	mMediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
 	    	mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
 	    	mMediaPlayer.setLooping(true);
 	    	mMediaPlayer.start();
 
 	    	Log.d(TAG, "MediaPlayer Start");
-    		
-	    	// TODO bring up activity that allows user to stop alarm
-
-	    }
+    	    }
 	    
 	    private void startStopRinger() {
-
 	    	Intent broadcast = new Intent();
 	    	broadcast.putExtra("message", mMessage);
 	    	Log.v("SMSLocatorService message",mMessage);
 	    	broadcast.setAction("StopRinger");
 	    	sendBroadcast(broadcast);
 	    	Log.d(TAG, "StopRinger Broadcast Sent");
-	    }
+	    	}
 	    
 	    private void enableGPS(boolean enable) {
 	    	//Uses exploit. CAUTION: make sure this holds up in future versions
@@ -201,16 +182,7 @@ public class SMSLocatorService extends Service {
 	        poke.setData(Uri.parse("3"));
 	        sendBroadcast(poke);
 	    }
-	    
-
-	    
-	    @Override
-	    public void onDestroy() {
-	        mNM.cancel(NOTIFICATION);
-	        mLocationManager.removeUpdates(mMyListener);
-	        Log.d(TAG, "LocationManager Unregistered");
-	    }
-
+	   
 	    private void showNotification() {
 	        // In this sample, we'll use the same text for the ticker and the expanded notification
 	        CharSequence text = getText(R.string.local_service_started);
@@ -269,50 +241,67 @@ public class SMSLocatorService extends Service {
     }
 
 	    private class MyLocationListener implements LocationListener {
-	    	        public void onLocationChanged(Location location) {
-	        	
-	    	            String message = String.format(
-	    	            			"New Location \n Longitude: %1$s \n Latitude: %2$s",
-    	            				location.getLongitude(), location.getLatitude()
-	    	            			);
-	    	            //mLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-	    	            String response = GetJson(location);
-	    	            Log.v("Json Response", response);
-	    	            if(!response.equals("")) {
-		    	            try {
-									JSONObject jsonObject = new JSONObject(response);
-									JSONArray resultObj = jsonObject.getJSONArray("results");
-									message = "You're In:\n"
-											+ resultObj.getJSONObject(0).getString("formatted_address");
-								} catch (JSONException e) {
-									e.printStackTrace();
-									Log.v("JSON","JSON not well formatted");
-									}
-								
-    	        			} else {
-    	        				Log.e("JSON Error","Failed to get JSON file");
-    	        				
-    	        			}
-	    	            	Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-	    	        	}
 
-	    	        public void onStatusChanged(String s, int i, Bundle b) {
-	    	        	Toast.makeText(SMSLocatorService.this, "Provider status changed",
-	    	            Toast.LENGTH_LONG).show();
-	    	        	}
-	    	
-	    	        public void onProviderDisabled(String s) {
-	    	            Toast.makeText(SMSLocatorService.this,
-	    	            "Provider disabled by the user. GPS turned off",
-	    	            Toast.LENGTH_LONG).show();
-	    	        	}
+	        public void onLocationChanged(Location location) {
+	        	// RAW GPS Coordinates (default response)
+	            String message = String.format(
+	            			"New Location \n Longitude: %1$s \n Latitude: %2$s",
+            				location.getLongitude(), location.getLatitude()
+	            			);
+	            // Attempting Readable Address Fetch From Google API
+	            String response = GetJson(location);
+	            Log.v("Json Response", response);
+	            if(!response.equals("")) {
+    	            try {
+							JSONObject jsonObject = new JSONObject(response);
+							JSONArray resultObj = jsonObject.getJSONArray("results");
+							message = "You're In:\n"
+									+ resultObj.getJSONObject(0).getString("formatted_address");
+							} 
+    	            catch (JSONException e) {
+						e.printStackTrace();
+						Log.v("JSON ERROR","GetJson() Returned Improper Formatted Response");
+						}
+        			} else {
+        				Log.e("JSON Error","Failed to get JSON file");
+        				}
+	            	Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+	            	sendResponse(message);
+	        	}
 
-	    	        public void onProviderEnabled(String s) {
-    	        		Toast.makeText(SMSLocatorService.this,
-        				"Provider enabled by the user. GPS turned on",
-        				Toast.LENGTH_LONG).show();
-	    	        	}
-	  
-	    			}
+	        public void onStatusChanged(String s, int i, Bundle b) {
+	        	Toast.makeText(SMSLocatorService.this, "Provider status changed",
+	            Toast.LENGTH_LONG).show();
+	        	}
+	
+	        public void onProviderDisabled(String s) {
+	            Toast.makeText(SMSLocatorService.this,
+	            "Provider disabled by the user. GPS turned off",
+	            Toast.LENGTH_LONG).show();
+	        	}
+
+	        public void onProviderEnabled(String s) {
+        		Toast.makeText(SMSLocatorService.this,
+				"Provider enabled by the user. GPS turned on",
+    				Toast.LENGTH_LONG).show();
+    	        	}
+  
+    			}
+	    
+	    void sendResponse(String message) {
+    		Log.v("sendResponse()","mAddress: " + mAddress +" mIsEmail: " + mIsEmail);
+    		SMSLocatorService.this.mSmsManager.sendTextMessage(mAddress, null, message, null, null);
+	    	}
+	    
+	    @Override
+	    public void onDestroy() {
+	        mNM.cancel(NOTIFICATION);
+	        if (mLocationManager != null) {
+	        	mLocationManager.removeUpdates(mMyListener);
+	        	}
+	        Log.d(TAG, "LocationManager Unregistered");
+	    }
+
+	   
 
 }

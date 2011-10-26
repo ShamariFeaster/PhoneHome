@@ -65,6 +65,7 @@ public class StopRinger extends Activity{
 		
 		
 		Intent intent = getIntent();
+		// This 
 		if(intent.hasExtra("message")) {
 			mMessage = intent.getStringExtra("message");
 			messageTextView.setText(mMessage);
@@ -78,8 +79,9 @@ public class StopRinger extends Activity{
 		    	 numberDisplayTextView.setText("seconds remaining: " + millisUntilFinished / 1000);
 		     }
 		     public void onFinish() {
-		    	 // TODO use Ibinder to stop alert
+		       	// TODO send sms back to user saying timer timed out
 		    	 mBoundService.stopPlayer();
+		    	 mBoundService.sendResponse("Timer Expired: Phone Not Found");
 		    	 finish();
 		     }
 		  }.start();
@@ -89,8 +91,10 @@ public class StopRinger extends Activity{
 			
 			public void onClick(View v) {
 				mCountDown.cancel(); 
-		    	 // TODO use Ibinder to stop alert
+		    	 
 				StopRinger.this.mBoundService.stopPlayer();
+				// TODO send sms back to user saying button was pushed
+				mBoundService.sendResponse("Timer Turned Off: Phone Found");
 				finish();
 			}
 		}); 
