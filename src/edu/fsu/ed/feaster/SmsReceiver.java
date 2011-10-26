@@ -21,6 +21,7 @@ public class SmsReceiver extends BroadcastReceiver {
 
 	protected static final int TURN_ON_RINGER = 0;
 	protected static final int TURN_ON_LOCATION = 1;
+	protected static final int TURN_ON_SYSTEMS_CHECK = 2;
 	private static final String TAG = "SMSReciever";
 	SharedPreferences preferences;
 	

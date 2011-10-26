@@ -20,8 +20,10 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
@@ -30,9 +32,11 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ParseException;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.telephony.gsm.SmsManager;
 import android.util.Log;
@@ -44,14 +48,18 @@ public class SMSLocatorService extends Service {
 	private NotificationManager mNM;
     private int NOTIFICATION = R.string.local_service_started;
     protected LocationManager mLocationManager;
+    private PowerManager mPowerManager;
     private MyLocationListener mMyListener = new MyLocationListener();
     private Location mLocation; 
     private SmsManager mSmsManager = SmsManager.getDefault();
+    
     
 	private int mCommand;
 	private String mMessage;
 	private String mAddress;
 	private Boolean mIsEmail; //did the command come from phone or email?
+	Boolean mAcPluggedIn = true; //start assuming plugged in
+	String mBatteryLevel;
 	private MediaPlayer mMediaPlayer;
 	final int GPS_UPDATE_TIME_INTERVAL = 60000; // final should be 1800000 = every 30 minutes; for testing its every second
 	final int GPS_UPDATE_DISTANCE_INTERVAL = 0;
@@ -84,11 +92,38 @@ public class SMSLocatorService extends Service {
 	    }
 	    // END Binding Section
 	    
-
+	    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
+	        @Override
+	        public void onReceive(Context context, Intent intent) {
+	        	// 0 = battery, 1 = ac, 2 = usb
+	        	int plugged = intent.getIntExtra("plugged", 0);
+	        	int scale = intent.getIntExtra("scale", 0);
+	        	int level = intent.getIntExtra("level", 0);
+	        	
+	        	//battery percentage remaining
+	        	int percent = scale/100;
+	        	level = level / percent;
+	        	SMSLocatorService.this.mBatteryLevel = String.valueOf(level) + "%";
+	        	
+	        	//if plugged is any other than 0, phone is plugged in
+	        	if (plugged == 0) {
+	        		SMSLocatorService.this.mAcPluggedIn = false;
+	        	} else {
+	        		SMSLocatorService.this.mAcPluggedIn = true;
+	        	}
+	        	
+	        	if (mAcPluggedIn) {
+	        		// send sms informing phone was just plugged in
+	    			Log.v("mPluggedIn", "Phone is plugged in");
+	    		}
+	        	//send sms with battery level remaining
+	    		Log.v("mBatteryLevel", mBatteryLevel);
+	        }
+	      };
 
 	    @Override
 	    public int onStartCommand(Intent intent, int flags, int startId) {
-	    	
+
 	    	Log.v("myService", "has started");
 	    	
 	    	mCommand = preferences.getInt("command", 5);
@@ -113,6 +148,9 @@ public class SMSLocatorService extends Service {
 		    		enableGPS(true);
 		    		turnonLocationService();
 		    		break;
+		    	case SmsReceiver.TURN_ON_SYSTEMS_CHECK:
+		    		registerBatteryReceiver();	
+		    		break;
 		    	default:
 		    		;
 		    	
@@ -120,10 +158,11 @@ public class SMSLocatorService extends Service {
 	    	//}
 	        return START_STICKY;
 	    }
-
+	    
 	    @Override
 	    public void onCreate() {
 	        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+	        mPowerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
 	        preferences = getSharedPreferences("preferences", Context.MODE_WORLD_READABLE);
 	        Log.d(TAG, "onCreate");
 	    	}
@@ -144,6 +183,7 @@ public class SMSLocatorService extends Service {
 	    	mAudioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 	    	mAudioManager.setStreamVolume(AudioManager.STREAM_RING, 
 	    				maxStreamVolume,AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+	    	showNotification();
 	    }
 	    
 	    private void playRinger() {
@@ -183,7 +223,16 @@ public class SMSLocatorService extends Service {
 	        sendBroadcast(poke);
 	    }
 	   
-	    private void showNotification() {
+	    private void registerBatteryReceiver() {
+	    	this.registerReceiver(this.mBatInfoReceiver, 
+	    		    new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+	    }
+	    
+	    private void unRegisterBatteryReceiver() {
+	    	this.unregisterReceiver(mBatInfoReceiver);
+	    }
+	    
+ 	    private void showNotification() {
 	        // In this sample, we'll use the same text for the ticker and the expanded notification
 	        CharSequence text = getText(R.string.local_service_started);
 
@@ -299,6 +348,7 @@ public class SMSLocatorService extends Service {
 	        if (mLocationManager != null) {
 	        	mLocationManager.removeUpdates(mMyListener);
 	        	}
+	        unRegisterBatteryReceiver();
 	        Log.d(TAG, "LocationManager Unregistered");
 	    }
 
