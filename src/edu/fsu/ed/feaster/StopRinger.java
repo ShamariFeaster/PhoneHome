@@ -19,7 +19,7 @@ public class StopRinger extends Activity{
 	String mMessage;
 	CountDownTimer mCountDown;
 	TextView numberDisplayTextView;
-		
+	Dialog dialogue;	
 	private LocalBinder mBoundService; 
 	private Boolean mIsBound;
 	
@@ -55,10 +55,9 @@ public class StopRinger extends Activity{
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		Log.v("StopRinger.java", "activity started");
-		
 		setContentView(R.layout.stop_timer_layout);
 		doBindService();
-		
+		dialogue = new Dialog(this);
 		TextView messageTextView = (TextView) findViewById(R.id.message_text);
 		numberDisplayTextView = (TextView) findViewById(R.id.number_display);
 		Button offTimerButton = (Button) findViewById(R.id.stop_timer_button);
@@ -91,7 +90,6 @@ public class StopRinger extends Activity{
 			
 			public void onClick(View v) {
 				mCountDown.cancel(); 
-		    	 
 				StopRinger.this.mBoundService.stopPlayer();
 				// TODO send sms back to user saying button was pushed
 				mBoundService.sendResponse("Timer Turned Off: Phone Found");

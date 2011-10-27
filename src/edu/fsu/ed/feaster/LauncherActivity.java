@@ -3,7 +3,6 @@ package edu.fsu.ed.feaster;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -21,7 +20,6 @@ public class LauncherActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-
     }
 
 @Override
@@ -37,7 +35,7 @@ protected void onResume() {
 	mSetPrefs.setOnClickListener(new View.OnClickListener() {
 		public void onClick(View v) {
 			
-			SharedPreferences preferences = getSharedPreferences("preferences", 3);
+			SharedPreferences preferences = getSharedPreferences("preferences", MODE_WORLD_READABLE);
 			SharedPreferences.Editor editor = preferences.edit();
 			Log.d(TAG, "mSetPrefs Clicked");
 			
