@@ -19,7 +19,7 @@ public class StopRinger extends Activity{
 	String mMessage;
 	CountDownTimer mCountDown;
 	TextView numberDisplayTextView;
-	Dialog dialogue;	
+		
 	private LocalBinder mBoundService; 
 	private Boolean mIsBound;
 	
@@ -57,7 +57,7 @@ public class StopRinger extends Activity{
 		Log.v("StopRinger.java", "activity started");
 		setContentView(R.layout.stop_timer_layout);
 		doBindService();
-		dialogue = new Dialog(this);
+		
 		TextView messageTextView = (TextView) findViewById(R.id.message_text);
 		numberDisplayTextView = (TextView) findViewById(R.id.number_display);
 		Button offTimerButton = (Button) findViewById(R.id.stop_timer_button);

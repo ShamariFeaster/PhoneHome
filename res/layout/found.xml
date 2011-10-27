@@ -31,16 +31,7 @@
        	android:layout_alignLeft="@+id/stop_ring">
        	</Button>
    
-    <ImageView 
-    	android:src="@drawable/sad" 
-    	android:id="@+id/sad" 
-   	 	android:layout_height="150dp"
-     	android:layout_width="200dp" 
-     	android:layout_below="@+id/logo"
-      	android:layout_centerHorizontal="true" 
-      	android:layout_marginTop="30dp">
-      	</ImageView>
-   
+ 
     <Button 
     	android:id="@+id/stop_ring" 
     	android:text="stop ringer" 
@@ -102,7 +93,8 @@
     	android:layout_marginTop="55dp">
     	</TextView>
     
-    <ImageView 
+    
+<ImageView 
     	android:layout_height="50dp" 
     	android:src="@drawable/phone" 
     	android:layout_width="50dp" 
@@ -111,4 +103,17 @@
     	android:layout_alignLeft="@+id/stop_ring">
     	</ImageView>
       
+
+
+ <ImageView 
+    	android:src="@drawable/sad" 
+    	android:id="@+id/sad" 
+   	 	android:layout_height="150dp"
+     	android:layout_width="200dp" 
+     	android:layout_below="@+id/logo"
+      	android:layout_centerHorizontal="true" 
+      	android:layout_marginTop="30dp">
+      	</ImageView>
+    
+
 </RelativeLayout>
