@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:id="@+id/LinearLayout1" xmlns:android="http://schemas.android.com/apk/res/android"
+	
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+   
+    <Button 
+    	android:id="@+id/text" 
+    	android:text="Text" 
+    	android:layout_height="50dp" 
+    	android:layout_width="130dp" 
+    	android:textColor="#000000" 
+    	android:textSize="35px" 
+    	android:background="#A4C639" 
+    	android:layout_alignParentBottom="true"  
+    	android:layout_alignRight="@+id/stop_ring" 
+    	android:layout_marginBottom="25dp">
+    	</Button>
+   
+    <Button 
+    	android:id="@+id/call"
+     	android:text="Call" 
+     	android:layout_height="50dp"
+      	android:layout_width="130dp"
+      	android:textColor="#000000"
+       	android:textSize="35px" 
+       	android:background="#A4C639" 
+       	android:layout_alignBaseline="@+id/text"
+        android:layout_alignBottom="@+id/text"
+       	android:layout_alignLeft="@+id/stop_ring">
+       	</Button>
+   
+    <ImageView 
+    	android:src="@drawable/sad" 
+    	android:id="@+id/sad" 
+   	 	android:layout_height="150dp"
+     	android:layout_width="200dp" 
+     	android:layout_below="@+id/logo"
+      	android:layout_centerHorizontal="true" 
+      	android:layout_marginTop="30dp">
+      	</ImageView>
+   
+    <Button 
+    	android:id="@+id/stop_ring" 
+    	android:text="stop ringer" 
+    	android:layout_height="60dp" 
+    	android:layout_width="280dp" 
+    	android:textColor="#000000" 
+    	android:textSize="35px" 
+    	android:background="#A4C639"
+     	android:layout_below="@+id/sad"
+      	android:layout_centerHorizontal="true" 
+      	android:layout_marginTop="38dp"></Button>
+      
+    <TextView 
+   	 	android:id="@+id/Contact" 
+    	android:layout_height="wrap_content" 
+    	android:text="Contact owner by..." 
+   	 	android:textSize="30px" 
+    	android:textColor="#A4C639" 
+    	android:layout_width="wrap_content" 
+    	android:layout_below="@+id/stop_ring" 
+    	android:layout_marginLeft="25dp" 
+    	android:layout_marginTop="25dp"></TextView>
+    
+    <TextView 
+    	android:id="@+id/phoneText" 
+    	android:layout_height="20dp" 
+    	android:text="Phone #:" 
+    	android:textAppearance="?android:attr/textAppearanceMedium" 
+    	android:textSize="30px" 
+   	 	android:textColor="#A4C639" 
+    	android:layout_width="wrap_content" 
+    	android:layout_below="@+id/Contact" 
+    	android:layout_marginLeft="25dp">	
+    	</TextView>
+    
+    <TextView 
+    	android:text="(850) 888-8888" 
+    	android:textAppearance="?android:attr/textAppearanceSmall" 
+    	android:id="@+id/phoneNumberDynamic" 
+    	android:layout_width="wrap_content" 
+    	android:textSize="30px"
+    	android:layout_height="wrap_content"
+      	android:textColor="#A4C639" 
+      	android:layout_alignBaseline="@+id/phoneText"
+       	android:layout_alignBottom="@+id/phoneText" 
+       	android:layout_toRightOf="@+id/call">
+       	</TextView>
+     
+    <TextView 
+    	android:text="Phone Home" 
+    	android:textAppearance="?android:attr/textAppearanceLarge" 
+    	android:id="@+id/logo" 
+    	android:layout_width="wrap_content" 
+    	android:layout_height="wrap_content" 
+    	android:textColor="#A4C639" 
+    	android:textSize="35dp"
+    	android:layout_alignParentTop="true" 
+    	android:layout_toRightOf="@+id/imageView1" 
+    	android:layout_marginTop="55dp">
+    	</TextView>
+    
+    <ImageView 
+    	android:layout_height="50dp" 
+    	android:src="@drawable/phone" 
+    	android:layout_width="50dp" 
+    	android:id="@+id/imageView1" 
+    	android:layout_above="@+id/sad" 
+    	android:layout_alignLeft="@+id/stop_ring">
+    	</ImageView>
+      
+</RelativeLayout>
