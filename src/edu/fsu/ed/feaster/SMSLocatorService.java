@@ -53,6 +53,8 @@ public class SMSLocatorService extends Service {
     private Location mLocation; 
     private SmsManager mSmsManager = SmsManager.getDefault();
     
+    private Boolean mReceiverRegistered = false;
+    
     
 	private int mCommand;
 	private String mMessage;
@@ -91,35 +93,35 @@ public class SMSLocatorService extends Service {
 	        return mBinder;
 	    }
 	    // END Binding Section
-	    
 	    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
-	        @Override
-	        public void onReceive(Context context, Intent intent) {
-	        	// 0 = battery, 1 = ac, 2 = usb
-	        	int plugged = intent.getIntExtra("plugged", 0);
-	        	int scale = intent.getIntExtra("scale", 0);
-	        	int level = intent.getIntExtra("level", 0);
-	        	
-	        	//battery percentage remaining
-	        	int percent = scale/100;
-	        	level = level / percent;
-	        	SMSLocatorService.this.mBatteryLevel = String.valueOf(level) + "%";
-	        	
-	        	//if plugged is any other than 0, phone is plugged in
-	        	if (plugged == 0) {
-	        		SMSLocatorService.this.mAcPluggedIn = false;
-	        	} else {
-	        		SMSLocatorService.this.mAcPluggedIn = true;
-	        	}
-	        	
-	        	if (mAcPluggedIn) {
-	        		// send sms informing phone was just plugged in
-	    			Log.v("mPluggedIn", "Phone is plugged in");
-	    		}
-	        	//send sms with battery level remaining
-	    		Log.v("mBatteryLevel", mBatteryLevel);
-	        }
-	      };
+ 	        @Override
+ 	        public void onReceive(Context context, Intent intent) {
+ 	        	// 0 = battery, 1 = ac, 2 = usb
+ 	        	int plugged = intent.getIntExtra("plugged", 0);
+ 	        	int scale = intent.getIntExtra("scale", 0);
+ 	        	int level = intent.getIntExtra("level", 0);
+ 	        	
+ 	        	//battery percentage remaining
+ 	        	int percent = scale/100;
+ 	        	level = level / percent;
+ 	        	SMSLocatorService.this.mBatteryLevel = String.valueOf(level) + "%";
+ 	        	
+ 	        	//if plugged is any other than 0, phone is plugged in
+ 	        	if (plugged == 0) {
+ 	        		SMSLocatorService.this.mAcPluggedIn = false;
+ 	        	} else {
+ 	        		SMSLocatorService.this.mAcPluggedIn = true;
+ 	        	}
+ 	        	
+ 	        	if (mAcPluggedIn) {
+ 	        		// send sms informing phone was just plugged in
+ 	    			Log.v("mPluggedIn", "Phone is plugged in");
+ 	    		}
+ 	        	//send sms with battery level remaining
+ 	    		Log.v("mBatteryLevel", mBatteryLevel);
+ 	        }
+ 	      };
+	   
 
 	    @Override
 	    public int onStartCommand(Intent intent, int flags, int startId) {
@@ -155,6 +157,7 @@ public class SMSLocatorService extends Service {
 		    		;
 		    	
 		    	}
+	    	 
 	    	//}
 	        return START_STICKY;
 	    }
@@ -226,6 +229,8 @@ public class SMSLocatorService extends Service {
 	    private void registerBatteryReceiver() {
 	    	this.registerReceiver(this.mBatInfoReceiver, 
 	    		    new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+	    	mReceiverRegistered = true;
+	    	
 	    }
 	    
 	    private void unRegisterBatteryReceiver() {
@@ -341,14 +346,17 @@ public class SMSLocatorService extends Service {
     		Log.v("sendResponse()","mAddress: " + mAddress +" mIsEmail: " + mIsEmail);
     		SMSLocatorService.this.mSmsManager.sendTextMessage(mAddress, null, message, null, null);
 	    	}
-	    
+	   
+	     
 	    @Override
 	    public void onDestroy() {
 	        mNM.cancel(NOTIFICATION);
 	        if (mLocationManager != null) {
 	        	mLocationManager.removeUpdates(mMyListener);
 	        	}
-	        unRegisterBatteryReceiver();
+	        if(mReceiverRegistered) {
+	        	unRegisterBatteryReceiver();
+	        }
 	        Log.d(TAG, "LocationManager Unregistered");
 	    }
 
