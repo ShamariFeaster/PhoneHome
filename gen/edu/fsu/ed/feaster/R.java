@@ -32,7 +32,7 @@ public final class R {
         public static final int imageView1=0x7f07000d;
         public static final int imageView2=0x7f070016;
         public static final int logo=0x7f07000c;
-        public static final int message_text=0x7f070017;
+        public static final int message_text=0x7f070018;
         public static final int message_to_finder_text=0x7f070012;
         public static final int number_display=0x7f070019;
         public static final int phoneNumberDynamic=0x7f07000b;
@@ -40,10 +40,10 @@ public final class R {
         public static final int radioGroup1=0x7f07000f;
         public static final int sad=0x7f070008;
         public static final int stop_ring=0x7f070006;
-        public static final int stop_timer_button=0x7f07001a;
+        public static final int stop_timer_button=0x7f070017;
         public static final int text=0x7f070005;
         public static final int textView1=0x7f070013;
-        public static final int timer_description=0x7f070018;
+        public static final int timer_description=0x7f07001a;
     }
     public static final class layout {
         public static final int dialog_layout=0x7f030000;
