@@ -1,4 +1,3 @@
-
 package edu.fsu.ed.feaster;
 
 import org.apache.http.HttpEntity;
@@ -42,14 +41,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class SMSLocatorService extends Service {
+
     private static final String TAG = "SMSlocatorService";
     final int GPS_UPDATE_TIME_INTERVAL = 60000; // final should be 1800000 = every 30 minutes;
     final int GPS_UPDATE_DISTANCE_INTERVAL = 0;
     final int NOTIFICATION = R.string.local_service_started;
 
     protected LocationManager mLocationManager;
-    private MediaPlayer mMediaPlayer;
-    private NotificationManager mNotificationManager;
+    private static MediaPlayer mMediaPlayer;// = new MediaPlayer();
+    private NotificationManager mNM;
     private MyLocationListener mMyListener = new MyLocationListener();
     private SmsManager mSmsManager = SmsManager.getDefault();
     private SharedPreferences preferences;
@@ -70,13 +70,15 @@ public class SMSLocatorService extends Service {
         }
 
         void stopPlayer() {
-            SMSLocatorService.this.mMediaPlayer.stop();
-            SMSLocatorService.this.mMediaPlayer.release();
+            SMSLocatorService.this.stopMediaPlayer();
         }
 
         void sendResponse(String message) {
-            Log.v("sendResponse()", "mAddress: " + mAddress + " mIsEmail: " + mIsEmail);
-            SMSLocatorService.this.mSmsManager.sendTextMessage(mAddress, null, message, null, null);
+            Log.v("SMsLocatorService: sendResponse()", "mAddress: "
+                    + SMSLocatorService.this.mAddress + " mIsEmail: "
+                    + SMSLocatorService.this.mIsEmail);
+            SMSLocatorService.this.mSmsManager.sendTextMessage(
+                        SMSLocatorService.this.mAddress, null, message, null, null);
         }
     }
 
@@ -95,17 +97,20 @@ public class SMSLocatorService extends Service {
             int plugged = intent.getIntExtra("plugged", 0);
             int scale = intent.getIntExtra("scale", 0);
             int level = intent.getIntExtra("level", 0);
+            String message = "";
 
             // battery percentage remaining
             int percent = scale / 100;
             level = level / percent;
             SMSLocatorService.this.mBatteryLevel = String.valueOf(level) + "%";
-
+            message += "Your battery is at " + SMSLocatorService.this.mBatteryLevel;
             // if plugged is any other than 0, phone is plugged in
             if (plugged == 0) {
                 SMSLocatorService.this.mAcPluggedIn = false;
+                message += ". The phone is NOT plugged in.";
             } else {
                 SMSLocatorService.this.mAcPluggedIn = true;
+                message += ". The phone IS charging.";
             }
 
             if (mAcPluggedIn) {
@@ -114,23 +119,19 @@ public class SMSLocatorService extends Service {
             }
             // send sms with battery level remaining
             Log.v("mBatteryLevel", mBatteryLevel);
+            sendResponse(message);
         }
     };
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // mMediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
+        mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
+        mMediaPlayer.setLooping(true);
+
+        Log.d(TAG, "onStratCommand: " + Integer.toString(mMediaPlayer.hashCode()));
 
         Log.v("myService", "has started");
-
-        mCommand = preferences.getInt("command", 5);
-        mMessage = preferences.getString("message", null);
-        mAddress = preferences.getString("sender_phone", null);
-        mIsEmail = preferences.getBoolean("isEmail", false);
-        if (mIsEmail) {
-            Log.v("Orig Email", mAddress);
-        } else {
-            Log.v("Orig Phone Address", mAddress);
-        }
 
         switch (mCommand) {
             case SmsReceiver.TURN_ON_RINGER:
@@ -156,14 +157,24 @@ public class SMSLocatorService extends Service {
 
     @Override
     public void onCreate() {
-        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        preferences = getSharedPreferences("preferences", Context.MODE_WORLD_READABLE);
+        mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        preferences = getSharedPreferences("preferences",
+                Context.MODE_WORLD_READABLE);
+        mCommand = preferences.getInt("command", 5);
+        mMessage = preferences.getString("message", null);
+        mAddress = preferences.getString("sender_phone", null);
+        mIsEmail = preferences.getBoolean("isEmail", false);
+        if (mIsEmail) {
+            Log.v("Orig Email", mAddress);
+        } else {
+            Log.v("SmsLocatorService", "Orig Phone Address" + mAddress);
+        }
         Log.d(TAG, "onCreate");
     }
 
     @Override
     public void onDestroy() {
-        mNotificationManager.cancel(NOTIFICATION);
+        mNM.cancel(NOTIFICATION);
         if (mLocationManager != null) {
             mLocationManager.removeUpdates(mMyListener);
         }
@@ -171,6 +182,10 @@ public class SMSLocatorService extends Service {
             unRegisterBatteryReceiver();
         }
         Log.d(TAG, "LocationManager Unregistered");
+        if (mMediaPlayer != null) {
+            Log.d(TAG, "OnDestroy: Media Player Not Null");
+        } else
+            Log.d(TAG, "OnDestroy: Media Player Null");
     }
 
     private void turnonLocationService() {
@@ -178,28 +193,41 @@ public class SMSLocatorService extends Service {
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         showNotification();
         mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    GPS_UPDATE_TIME_INTERVAL, GPS_UPDATE_DISTANCE_INTERVAL, mMyListener);
+                GPS_UPDATE_TIME_INTERVAL, GPS_UPDATE_DISTANCE_INTERVAL,
+                mMyListener);
     }
 
     private void turnOnRinger() {
         Log.d(TAG, "turnOnRinger");
         AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        int maxStreamVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_RING);
+        int maxStreamVolume = mAudioManager
+                .getStreamMaxVolume(AudioManager.STREAM_RING);
         mAudioManager.setRingerMode(AudioManager.VIBRATE_SETTING_OFF);
         mAudioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
         mAudioManager.setStreamVolume(AudioManager.STREAM_RING,
-                    maxStreamVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+                maxStreamVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
         showNotification();
     }
 
-    private void playRinger() {
-        Log.d(TAG, "playRinger");
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
-        mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
-        mMediaPlayer.setLooping(true);
-        mMediaPlayer.start();
+    private void stopMediaPlayer() {
+        Log.d(TAG, "stopMediaPlayer()");
+        Log.d(TAG, "stopMediaPlayer(): " + Integer.toString(mMediaPlayer.hashCode()));
+        if (mMediaPlayer != null) {
+            Log.d(TAG, "stopMediaPlayer(): Media Player Not Null");
+            try {
+                mMediaPlayer.stop();
+                mMediaPlayer.setLooping(false);
+                mMediaPlayer.release();
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+            }
+        } else
+            Log.d(TAG, "stopMediaPlayer(): Media Player Null");
+    }
 
+    private void playRinger() {
+        Log.d(TAG, "playRinger()");
+        mMediaPlayer.start();
         Log.d(TAG, "MediaPlayer Start");
     }
 
@@ -230,8 +258,8 @@ public class SMSLocatorService extends Service {
     }
 
     private void registerBatteryReceiver() {
-        this.registerReceiver(this.mBatInfoReceiver,
-                    new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(
+                Intent.ACTION_BATTERY_CHANGED));
         mReceiverRegistered = true;
 
     }
@@ -245,19 +273,20 @@ public class SMSLocatorService extends Service {
         CharSequence text = getText(R.string.local_service_started);
 
         // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification(android.R.drawable.ic_dialog_alert, text,
-                    System.currentTimeMillis());
+        Notification notification = new Notification(
+                android.R.drawable.ic_dialog_alert, text,
+                System.currentTimeMillis());
 
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                    new Intent(this, LauncherActivity.class), 0);
+                new Intent(this, LauncherActivity.class), 0);
 
         // Set the info for the views that show in the notification panel.
-        notification.setLatestEventInfo(this, getText(R.string.local_service_label),
-                    text, contentIntent);
+        notification.setLatestEventInfo(this,
+                getText(R.string.local_service_label), text, contentIntent);
 
         // Send the notification.
-        mNotificationManager.notify(NOTIFICATION, notification);
+        mNM.notify(NOTIFICATION, notification);
     }
 
     private String GetJson(Location location) {
@@ -267,7 +296,8 @@ public class SMSLocatorService extends Service {
         HttpGet httpGet = new HttpGet(
 
         "http://maps.googleapis.com/maps/api/geocode/json?latlng="
-                    + location.getLatitude() + "," + location.getLongitude() + "&sensor=true");
+                + location.getLatitude() + "," + location.getLongitude()
+                + "&sensor=true");
         try {
             HttpResponse response = client.execute(httpGet);
             StatusLine statusLine = response.getStatusLine();
@@ -276,7 +306,7 @@ public class SMSLocatorService extends Service {
                 HttpEntity entity = response.getEntity();
                 InputStream content = entity.getContent();
                 BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(content));
+                        new InputStreamReader(content));
                 String line;
                 while ((line = reader.readLine()) != null) {
                     builder.append(line);
@@ -302,8 +332,8 @@ public class SMSLocatorService extends Service {
         public void onLocationChanged(Location location) {
             // RAW GPS Coordinates (default response)
             String message = String.format(
-                        "New Location \n Longitude: %1$s \n Latitude: %2$s",
-                        location.getLongitude(), location.getLatitude());
+                    "New Location \n Longitude: %1$s \n Latitude: %2$s",
+                    location.getLongitude(), location.getLatitude());
             // Attempting Readable Address Fetch From Google API
             String response = GetJson(location);
             Log.v("Json Response", response);
@@ -312,7 +342,7 @@ public class SMSLocatorService extends Service {
                     JSONObject jsonObject = new JSONObject(response);
                     JSONArray resultObj = jsonObject.getJSONArray("results");
                     message = "You're In:\n"
-                                + resultObj.getJSONObject(0).getString("formatted_address");
+                            + resultObj.getJSONObject(0).getString("formatted_address");
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Log.v("JSON ERROR", "GetJson() Returned Improper Formatted Response");
@@ -330,8 +360,7 @@ public class SMSLocatorService extends Service {
         }
 
         public void onProviderDisabled(String s) {
-            Toast.makeText(SMSLocatorService.this,
-                    "Provider disabled by the user. GPS turned off",
+            Toast.makeText(SMSLocatorService.this, "Provider disabled by the user. GPS turned off",
                     Toast.LENGTH_LONG).show();
         }
 

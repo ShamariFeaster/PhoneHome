@@ -14,21 +14,28 @@ import android.widget.EditText;
 public class LauncherActivity extends Activity {
 
     private static final String TAG = "LauncherActivity";
+    private Button mSetPrefs;
+    private Button mCloserButton;
+    private EditText mPwEditText;
+    private EditText mMsgEditText;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        PreferenceManager.setDefaultValues(this, R.xml.preference, false);
+
+        mSetPrefs = (Button) findViewById(R.id.button1);
+        mCloserButton = (Button) findViewById(R.id.button2);
+        mPwEditText = (EditText) findViewById(R.id.editText1);
+        mMsgEditText = (EditText) findViewById(R.id.message_to_finder_text);
     }
 
     @Override
     protected void onResume() {
+        // TODO Auto-generated method stub
         super.onResume();
-
-        PreferenceManager.setDefaultValues(this, R.xml.preference, false);
-
-        Button mSetPrefs = (Button) findViewById(R.id.button1);
-        Button mCloserButton = (Button) findViewById(R.id.button2);
 
         mSetPrefs.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -38,11 +45,8 @@ public class LauncherActivity extends Activity {
                 SharedPreferences.Editor editor = preferences.edit();
                 Log.d(TAG, "mSetPrefs Clicked");
 
-                EditText EditTxt = (EditText) findViewById(R.id.editText1);
-                EditText message_to_finder = (EditText) findViewById(R.id.message_to_finder_text);
-
-                editor.putString("password", EditTxt.getText().toString());
-                editor.putString("message", message_to_finder.getText().toString());
+                editor.putString("password", mPwEditText.getText().toString());
+                editor.putString("message", mMsgEditText.getText().toString());
 
                 editor.commit();
                 Log.d(TAG, "Preferences Saved");
