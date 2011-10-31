@@ -12,13 +12,6 @@ import android.util.Log;
 import java.util.HashMap;
 import java.util.Map;
 
-/*Currently the priority isn't set high enough in the manifest
- * eventually I want this to swallow up messages with the given keyword using
- * abortBroadcast()
- * 
- * there isn't a list of commands yet to trigger actions
- * 
- */
 public class SmsReceiver extends BroadcastReceiver {
 
     protected static final int TURN_ON_RINGER = 0;
@@ -33,10 +26,9 @@ public class SmsReceiver extends BroadcastReceiver {
         Log.d(TAG, "onReceive");
         preferences = context.getSharedPreferences("preferences", 3);
         SharedPreferences.Editor editor = preferences.edit();
-
         String[] commands_list = {
                 "com1", "com2", "com3", "com4"
-        };// possible commands to perform remote operations
+        };
         Map<String, Integer> command_map = new HashMap<String, Integer>();
         for (int x = 0; x < commands_list.length; x++) {
             command_map.put(commands_list[x], x);
@@ -67,34 +59,24 @@ public class SmsReceiver extends BroadcastReceiver {
 
                 if (msg.contains(key_pw)) {
                     Intent i = new Intent(context, SMSLocatorService.class);
-
                     editor.putInt("command", x);
-                    
                     // Message from the owner
                     i.putExtra("message", messsageFromLauncherActivity);
-                    Log.v("SmsReciver Message", messsageFromLauncherActivity);
                     if (!messages[0].isEmail()) {
                     	mOriginatingAddress = messages[0].getOriginatingAddress();
-                    	Log.v("SmsReceiver", mOriginatingAddress);
+                    	Log.v(TAG, mOriginatingAddress);
                         editor.putString("sender_phone", mOriginatingAddress);
                         editor.putBoolean("isEmail", false);
-
                     } else {
-
-                        // This is untested. Need to test on real phone
                         editor.putString("sender_email", messages[0]
                                 .getDisplayOriginatingAddress());
                         editor.putBoolean("isEmail", true);
-
                     }
-
                     context.startService(i);
                 }
                 editor.commit();
             }
-            // END search for command+password
-
-        }// END if (line: 31)
-    }// END onRecieve
-}// END Class
+        }
+    }
+}
 

@@ -22,7 +22,6 @@ public class StopRinger extends Activity {
 
 	private String mMessage;
 	private CountDownTimer mCountDown;
-	private AlertDialog.Builder mAlertBuilder;
 	private LocalBinder mBoundService;
 	private Boolean mIsBound = false;
 
@@ -69,22 +68,6 @@ public class StopRinger extends Activity {
 
 		preferences = getSharedPreferences("preferences", MODE_WORLD_READABLE);
 
-		mAlertBuilder = new AlertDialog.Builder(this);
-		mAlertBuilder
-				.setMessage(
-						preferences
-								.getString("message",
-										"This Phone Is Lost. Please Call One Of My Contact & Let Them Know. Thank You"))
-				.setCancelable(false)
-				.setPositiveButton("Confirm",
-						new DialogInterface.OnClickListener() {
-
-							public void onClick(DialogInterface dialog,
-									int which) {
-								finish();
-							}
-						});
-
 		mMessageTextView = (TextView) findViewById(R.id.message_text);
 		mNumberDisplayTextView = (TextView) findViewById(R.id.number_display);
 		mOffTimerButton = (Button) findViewById(R.id.stop_timer_button);
@@ -128,9 +111,6 @@ public class StopRinger extends Activity {
 					mBoundService.sendResponse("Timer Turned Off: Phone Found");
 					mBoundService.stopPlayer();
 				}
-				AlertDialog alert = mAlertBuilder.create();
-				alert.setTitle("Message from the owner");
-				alert.show();
 				mCountDown.cancel();
 				finish();
 
