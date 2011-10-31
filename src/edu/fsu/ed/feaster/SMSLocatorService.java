@@ -115,10 +115,9 @@ public class SMSLocatorService extends Service {
 
 			if (mAcPluggedIn) {
 				// send sms informing phone was just plugged in
-				Log.d(TAG + ": mPluggedIn", "Phone is plugged in");
 			}
 			// send sms with battery level remaining
-			Log.d(TAG + ": mBatteryLevel", mBatteryLevel);
+			Log.d(TAG + ": message sent", message);
 			sendResponse(message, SMSLocatorService.this.mSmsManager);
 		}
 	};
@@ -376,7 +375,6 @@ public class SMSLocatorService extends Service {
 		}
 	}// END MyLocationListener
 
-	@SuppressWarnings("deprecation")
 	void sendResponse(String message, SmsManager manager) {
 		Log.v("sendResponse()", "mAddress: " + mAddress + " mIsEmail: "
 				+ mIsEmail);
