@@ -1,3 +1,4 @@
+
 package edu.fsu.ed.feaster;
 
 import org.apache.http.HttpEntity;
@@ -41,7 +42,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class SMSLocatorService extends Service {
-
     private static final String TAG = "SMSlocatorService";
     final int GPS_UPDATE_TIME_INTERVAL = 60000; // final should be 1800000 = every 30 minutes;
     final int GPS_UPDATE_DISTANCE_INTERVAL = 0;
@@ -49,7 +49,7 @@ public class SMSLocatorService extends Service {
 
     protected LocationManager mLocationManager;
     private static MediaPlayer mMediaPlayer;// = new MediaPlayer();
-    private NotificationManager mNM;
+    private NotificationManager mNotificationManager;
     private MyLocationListener mMyListener = new MyLocationListener();
     private SmsManager mSmsManager = SmsManager.getDefault();
     private SharedPreferences preferences;
@@ -78,7 +78,7 @@ public class SMSLocatorService extends Service {
                     + SMSLocatorService.this.mAddress + " mIsEmail: "
                     + SMSLocatorService.this.mIsEmail);
             SMSLocatorService.this.mSmsManager.sendTextMessage(
-                        SMSLocatorService.this.mAddress, null, message, null, null);
+                    SMSLocatorService.this.mAddress, null, message, null, null);
         }
     }
 
@@ -119,7 +119,7 @@ public class SMSLocatorService extends Service {
             }
             // send sms with battery level remaining
             Log.v("mBatteryLevel", mBatteryLevel);
-            sendResponse(message);
+            sendResponse(message, SMSLocatorService.this.mSmsManager);
         }
     };
 
@@ -129,7 +129,8 @@ public class SMSLocatorService extends Service {
         mMediaPlayer = MediaPlayer.create(this, R.raw.alarm);
         mMediaPlayer.setLooping(true);
 
-        Log.d(TAG, "onStratCommand: " + Integer.toString(mMediaPlayer.hashCode()));
+        Log.d(TAG,
+                "onStratCommand: " + Integer.toString(mMediaPlayer.hashCode()));
 
         Log.v("myService", "has started");
 
@@ -157,7 +158,7 @@ public class SMSLocatorService extends Service {
 
     @Override
     public void onCreate() {
-        mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         preferences = getSharedPreferences("preferences",
                 Context.MODE_WORLD_READABLE);
         mCommand = preferences.getInt("command", 5);
@@ -174,7 +175,7 @@ public class SMSLocatorService extends Service {
 
     @Override
     public void onDestroy() {
-        mNM.cancel(NOTIFICATION);
+        mNotificationManager.cancel(NOTIFICATION);
         if (mLocationManager != null) {
             mLocationManager.removeUpdates(mMyListener);
         }
@@ -221,13 +222,17 @@ public class SMSLocatorService extends Service {
             } catch (IllegalStateException e) {
                 e.printStackTrace();
             }
+
         } else
             Log.d(TAG, "stopMediaPlayer(): Media Player Null");
+
     }
 
     private void playRinger() {
         Log.d(TAG, "playRinger()");
+
         mMediaPlayer.start();
+
         Log.d(TAG, "MediaPlayer Start");
     }
 
@@ -274,8 +279,7 @@ public class SMSLocatorService extends Service {
 
         // Set the icon, scrolling text and timestamp
         Notification notification = new Notification(
-                android.R.drawable.ic_dialog_alert, text,
-                System.currentTimeMillis());
+                android.R.drawable.ic_dialog_alert, text, System.currentTimeMillis());
 
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -286,7 +290,7 @@ public class SMSLocatorService extends Service {
                 getText(R.string.local_service_label), text, contentIntent);
 
         // Send the notification.
-        mNM.notify(NOTIFICATION, notification);
+        mNotificationManager.notify(NOTIFICATION, notification);
     }
 
     private String GetJson(Location location) {
@@ -296,8 +300,7 @@ public class SMSLocatorService extends Service {
         HttpGet httpGet = new HttpGet(
 
         "http://maps.googleapis.com/maps/api/geocode/json?latlng="
-                + location.getLatitude() + "," + location.getLongitude()
-                + "&sensor=true");
+                + location.getLatitude() + "," + location.getLongitude() + "&sensor=true");
         try {
             HttpResponse response = client.execute(httpGet);
             StatusLine statusLine = response.getStatusLine();
@@ -305,8 +308,7 @@ public class SMSLocatorService extends Service {
             if (statusCode == 200) {
                 HttpEntity entity = response.getEntity();
                 InputStream content = entity.getContent();
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(content));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(content));
                 String line;
                 while ((line = reader.readLine()) != null) {
                     builder.append(line);
@@ -331,8 +333,7 @@ public class SMSLocatorService extends Service {
 
         public void onLocationChanged(Location location) {
             // RAW GPS Coordinates (default response)
-            String message = String.format(
-                    "New Location \n Longitude: %1$s \n Latitude: %2$s",
+            String message = String.format( "New Location \n Longitude: %1$s \n Latitude: %2$s",
                     location.getLongitude(), location.getLatitude());
             // Attempting Readable Address Fetch From Google API
             String response = GetJson(location);
@@ -341,8 +342,8 @@ public class SMSLocatorService extends Service {
                 try {
                     JSONObject jsonObject = new JSONObject(response);
                     JSONArray resultObj = jsonObject.getJSONArray("results");
-                    message = "You're In:\n"
-                            + resultObj.getJSONObject(0).getString("formatted_address");
+                    message = "You're In:\n" + resultObj.getJSONObject(0).getString(
+                            "formatted_address");
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Log.v("JSON ERROR", "GetJson() Returned Improper Formatted Response");
@@ -351,7 +352,7 @@ public class SMSLocatorService extends Service {
                 Log.e("JSON Error", "Failed to get JSON file");
             }
             Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-            sendResponse(message);
+            sendResponse(message, SMSLocatorService.this.mSmsManager);
         }
 
         public void onStatusChanged(String s, int i, Bundle b) {
@@ -365,15 +366,13 @@ public class SMSLocatorService extends Service {
         }
 
         public void onProviderEnabled(String s) {
-            Toast.makeText(SMSLocatorService.this,
-                    "Provider enabled by the user. GPS turned on",
+            Toast.makeText(SMSLocatorService.this, "Provider enabled by the user. GPS turned on",
                     Toast.LENGTH_LONG).show();
         }
     }// END MyLocationListener
 
-    void sendResponse(String message) {
+    void sendResponse(String message, SmsManager manager) {
         Log.v("sendResponse()", "mAddress: " + mAddress + " mIsEmail: " + mIsEmail);
-        SMSLocatorService.this.mSmsManager.sendTextMessage(mAddress, null, message, null, null);
+        manager.sendTextMessage(mAddress, null, message, null, null);
     }
-
 }
