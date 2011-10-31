@@ -1,4 +1,3 @@
-
 package edu.fsu.ed.feaster;
 
 import edu.fsu.ed.feaster.SMSLocatorService.LocalBinder;
@@ -21,110 +20,155 @@ import android.widget.TextView;
 
 public class StopRinger extends Activity {
 
-    private String mMessage;
-    private CountDownTimer mCountDown;
-    private AlertDialog.Builder mAlertBuilder;
-    private LocalBinder mBoundService;
-    private Boolean mIsBound;
+	private String mMessage;
+	private CountDownTimer mCountDown;
+	private AlertDialog.Builder mAlertBuilder;
+	private LocalBinder mBoundService;
+	private Boolean mIsBound = false;
 
-    TextView numberDisplayTextView;
-    SharedPreferences preferences;
+	TextView mNumberDisplayTextView;
+	TextView mMessageTextView;
+	Button mOffTimerButton;
 
-    private class MyServiceConnection implements ServiceConnection {
+	SharedPreferences preferences;
 
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mBoundService = (LocalBinder) service;
-        }
+	private class MyServiceConnection implements ServiceConnection {
 
-        public void onServiceDisconnected(ComponentName name) {
-            mBoundService = null;
-        }
-    };
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mBoundService = (LocalBinder) service;
+		}
 
-    private MyServiceConnection mConnection = new MyServiceConnection();
+		public void onServiceDisconnected(ComponentName name) {
+			mBoundService = null;
+		}
+	};
 
-    void doBindService() {
-        bindService(new Intent(this, SMSLocatorService.class), mConnection,
-                Context.BIND_AUTO_CREATE);
-        mIsBound = true;
-        Log.v("Bind", "Service Bound");
-    }
+	private MyServiceConnection mConnection = new MyServiceConnection();
 
-    void doUnbindService() {
-        if (mIsBound) {
-            // Detach our existing connection.
-            unbindService(mConnection);
-            mIsBound = false;
-        }
-    }
+	void doBindService() {
+		bindService(new Intent(this, SMSLocatorService.class), mConnection,
+				Context.BIND_AUTO_CREATE);
+		mIsBound = true;
+		Log.v("Bind", "Service Bound");
+	}
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Log.v("StopRinger.java", "activity started");
-        setContentView(R.layout.stop_timer_layout);
-        doBindService();
-        preferences = getSharedPreferences("preferences", MODE_WORLD_READABLE);
+	void doUnbindService() {
+		if (mIsBound) {
+			// Detach our existing connection.
+			unbindService(mConnection);
+			mIsBound = false;
+			Log.v("Bind", "Service UnBound");
+		}
+	}
 
-        mAlertBuilder = new AlertDialog.Builder(this);
-        mAlertBuilder.setMessage(preferences.getString("message", 
-                "This Phone Is Lost. Please Call One Of My Contact & Let Them Know. Thank You"))
-                .setCancelable(false).setPositiveButton("Confirm",
-                new DialogInterface.OnClickListener() {
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		Log.v("StopRinger.java", "activity started");
+		setContentView(R.layout.stop_timer_layout);
 
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    });
+		preferences = getSharedPreferences("preferences", MODE_WORLD_READABLE);
 
-        TextView messageTextView = (TextView) findViewById(R.id.message_text);
-        numberDisplayTextView = (TextView) findViewById(R.id.number_display);
-        Button offTimerButton = (Button) findViewById(R.id.stop_timer_button);
+		mAlertBuilder = new AlertDialog.Builder(this);
+		mAlertBuilder
+				.setMessage(
+						preferences
+								.getString("message",
+										"This Phone Is Lost. Please Call One Of My Contact & Let Them Know. Thank You"))
+				.setCancelable(false)
+				.setPositiveButton("Confirm",
+						new DialogInterface.OnClickListener() {
 
-        Intent intent = getIntent();
-        // This
-        if (intent.hasExtra("message")) {
-            mMessage = intent.getStringExtra("message");
-            messageTextView.setText(mMessage);
-        } else {
-            messageTextView
-                    .setText("This Phone Is Lost. Please Call One Of " +
-                            "My Contact & Let Them Know. Thank You");
-        }
+							public void onClick(DialogInterface dialog,
+									int which) {
+								finish();
+							}
+						});
 
-        // countdown timer
-        mCountDown = new CountDownTimer(30000, 1000) {
-            public void onTick(long millisUntilFinished) {
-                numberDisplayTextView.setText("seconds remaining: " + millisUntilFinished / 1000);
-            }
+		mMessageTextView = (TextView) findViewById(R.id.message_text);
+		mNumberDisplayTextView = (TextView) findViewById(R.id.number_display);
+		mOffTimerButton = (Button) findViewById(R.id.stop_timer_button);
 
-            public void onFinish() {
-                // TODO: send sms back to user saying timer timed out
-                mBoundService.stopPlayer();
-                mBoundService.sendResponse("Timer Expired: Phone Not Found");
-                finish();
-            }
-        }.start();
-        // END countdown timer
+		Intent intent = getIntent();
+		// This
+		if (intent.hasExtra("message")) {
+			mMessage = intent.getStringExtra("message");
+			mMessageTextView.setText(mMessage);
+		} else {
+			mMessageTextView.setText("This Phone Is Lost. Please Call One Of "
+					+ "My Contact & Let Them Know. Thank You");
+		}
 
-        offTimerButton.setOnClickListener(new View.OnClickListener() {
+		// countdown timer
+		mCountDown = new CountDownTimer(30000, 1000) {
+			public void onTick(long millisUntilFinished) {
+				mNumberDisplayTextView.setText("seconds remaining: "
+						+ millisUntilFinished / 1000);
+			}
 
-            public void onClick(View v) {
-                mCountDown.cancel();
-                StopRinger.this.mBoundService.stopPlayer();
-                // TODO: send sms back to user saying button was pushed
-                mBoundService.sendResponse("Timer Turned Off: Phone Found");
-                AlertDialog alert = mAlertBuilder.create();
-                alert.setTitle("Message from the owner");
-                alert.show();
-            }
-        });
+			public void onFinish() {
+				// TODO: send sms back to user saying timer timed out
+				if (mBoundService != null) {
+					mBoundService.stopPlayer();
+					mBoundService
+							.sendResponse("Timer Expired: Phone Not Found");
+				}
+				stopService(new Intent(getApplicationContext(),
+						SMSLocatorService.class));
+				finish();
+			}
+		}.start();
+		// END countdown timer
 
-    }
+		mOffTimerButton.setOnClickListener(new View.OnClickListener() {
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        doUnbindService();
-    }
+			public void onClick(View v) {
+				// TODO: send sms back to user saying button was pushed
+				if (mBoundService != null) {
+					mBoundService.sendResponse("Timer Turned Off: Phone Found");
+					mBoundService.stopPlayer();
+				}
+				AlertDialog alert = mAlertBuilder.create();
+				alert.setTitle("Message from the owner");
+				alert.show();
+				mCountDown.cancel();
+				finish();
+
+			}
+		});
+
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		if (!mIsBound) {
+			doBindService();
+		}
+		Log.v("StopRinger", "OnResume");
+	}
+
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		if (mIsBound) {
+			doUnbindService();
+		}
+		Log.v("StopRinger", "OnPause");
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if (mIsBound) {
+			doUnbindService();
+		}
+		if (stopService(new Intent(getApplicationContext(),
+				SMSLocatorService.class))) {
+			Log.v("StopRinger", "Service Stopped");
+		}
+		Log.v("StopRinger", "OnDestroy");
+	}
 }

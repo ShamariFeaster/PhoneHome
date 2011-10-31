@@ -25,13 +25,13 @@ public class SmsReceiver extends BroadcastReceiver {
     protected static final int TURN_ON_LOCATION = 1;
     protected static final int TURN_ON_SYSTEMS_CHECK = 2;
     private static final String TAG = "SMSReciever";
+    String mOriginatingAddress;
     SharedPreferences preferences;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive");
         preferences = context.getSharedPreferences("preferences", 3);
-
         SharedPreferences.Editor editor = preferences.edit();
 
         String[] commands_list = {
@@ -74,8 +74,9 @@ public class SmsReceiver extends BroadcastReceiver {
                     i.putExtra("message", messsageFromLauncherActivity);
                     Log.v("SmsReciver Message", messsageFromLauncherActivity);
                     if (!messages[0].isEmail()) {
-
-                        editor.putString("sender_phone", messages[0].getOriginatingAddress());
+                    	mOriginatingAddress = messages[0].getOriginatingAddress();
+                    	Log.v("SmsReceiver", mOriginatingAddress);
+                        editor.putString("sender_phone", mOriginatingAddress);
                         editor.putBoolean("isEmail", false);
 
                     } else {
