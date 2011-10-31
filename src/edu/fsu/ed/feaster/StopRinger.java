@@ -22,6 +22,7 @@ public class StopRinger extends Activity {
 
 	private String mMessage;
 	private CountDownTimer mCountDown;
+
 	private LocalBinder mBoundService;
 	private Boolean mIsBound = false;
 
