@@ -117,7 +117,7 @@ public class SMSLocatorService extends Service {
 			}
 			// send sms with battery level remaining
 			Log.v("mBatteryLevel", mBatteryLevel);
-			sendResponse(message);
+			sendResponse(message, SMSLocatorService.this.mSmsManager);
 		}
 	};
 
@@ -363,7 +363,7 @@ public class SMSLocatorService extends Service {
 			}
 			Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG)
 					.show();
-			sendResponse(message);
+			sendResponse(message, SMSLocatorService.this.mSmsManager);
 		}
 
 		public void onStatusChanged(String s, int i, Bundle b) {
@@ -384,10 +384,10 @@ public class SMSLocatorService extends Service {
 		}
 	}// END MyLocationListener
 
-	void sendResponse(String message) {
+	void sendResponse(String message, SmsManager manager) {
 		Log.v("sendResponse()", "mAddress: " + mAddress + " mIsEmail: "
 				+ mIsEmail);
-		SMSLocatorService.this.mSmsManager.sendTextMessage(mAddress, null,
+		manager.sendTextMessage(mAddress, null,
 				message, null, null);
 	}
 
