@@ -358,7 +358,7 @@ public class SMSLocatorService extends Service {
 			}
 			
 			if (DEBUG) {
-				showToast(message);
+				SMSLocatorService.sShowToast(getApplicationContext(), message);
 			}
 			sendResponse(message, SMSLocatorService.this.mSmsManager);
 		}
@@ -376,6 +376,7 @@ public class SMSLocatorService extends Service {
 		}
 	}// END MyLocationListener
 
+	@SuppressWarnings("deprecation")
 	void sendResponse(String message, SmsManager manager) {
 		Log.v("sendResponse()", "mAddress: " + mAddress + " mIsEmail: "
 				+ mIsEmail);
@@ -383,8 +384,8 @@ public class SMSLocatorService extends Service {
 				message, null, null);
 	}
 	
-	void showToast(String message) {
-		Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG)
+	static void sShowToast(Context context, String message) {
+		Toast.makeText(context, message, Toast.LENGTH_LONG)
 		.show();
 	}
 
