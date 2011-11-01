@@ -4,7 +4,7 @@
 
     <Preference
             android:key="password"
-            android:defaultValue="pw"
+            android:defaultValue="default_password"
  />
     <Preference
             android:key="message"
@@ -13,6 +13,11 @@
     <Preference
             android:key="sender_phone"
             android:defaultValue="null"
+ />
+ 
+     <Preference
+            android:key="first_execution"
+            android:defaultValue="true"
  />
            
 

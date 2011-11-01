@@ -80,7 +80,7 @@ public class StopRinger extends Activity {
 			mMessageTextView.setText(mMessage);
 		} else {
 			mMessageTextView.setText("This Phone Is Lost. Please Call One Of "
-					+ "My Contact & Let Them Know. Thank You");
+					+ "My Contacts & Let Them Know. Thank You");
 		}
 
 		// countdown timer
