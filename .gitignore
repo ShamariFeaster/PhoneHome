@@ -1,15 +1,17 @@
-.metadata
-tmp/**
-.DS_Store
-*.tmp
-*.bak
-tmp/**/*
-*.swp
-*~.nib
-Thumbs.db
-Desktop.ini
-*~
+# built application files
 *.apk
-bin
-gen
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+
+# Local configuration file (sdk path, etc)
+
 local.properties
